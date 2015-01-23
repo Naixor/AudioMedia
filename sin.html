@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Sin</title>
+</head>
+<body>
+	<audio id="audio" autoplay="autoplay" loop="loop">
+		<source src="bgmusic.mp3"></source>
+	</audio>
+	<canvas width="200" height="200" style="border-radius:50%;"></canvas>
+	<script>
+	    var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+		var canvas = document.querySelector('canvas');
+		var ctx = canvas.getContext('2d');
+		var WIDTH = canvas.width;
+		var HEIGHT = canvas.height;
+
+		var drawVisual; // requestAnimationFrame
+
+	    var analyser = audioCtx.createAnalyser();
+	    var distortion = audioCtx.createWaveShaper();
+	    var gainNode = audioCtx.createGain();
+	    var biquadFilter = audioCtx.createBiquadFilter();
+
+		var dx = 0;
+		var ys = new Array(WIDTH);
+
+		ctx.lineWidth = 2;
+		ctx.strokeStyle = 'rgba(0, 255, 255, 0.8)';
+		ctx.moveTo(0, HEIGHT/2);
+		ctx.lineTo(WIDTH, HEIGHT/2);				
+
+		var audio = document.querySelector('#audio');
+		audio.onplay = function(){
+			source = audioCtx.createMediaElementSource(audio);
+			source.connect(analyser);
+			analyser.connect(distortion);
+			distortion.connect(biquadFilter);
+			biquadFilter.connect(gainNode);
+			gainNode.connect(audioCtx.destination);
+			visualize();
+		}
+
+		function visualize() {
+			analyser.fftSize = 2048;
+			var bufferLength = analyser.frequencyBinCount;
+			var index = 0;
+			var dataArray = new Uint8Array(1);
+			var outputArr = new Uint8Array(50);
+
+			analyser.getByteTimeDomainData(dataArray);
+			function draw(){
+				drawVisual = requestAnimationFrame(draw);
+
+				ctx.clearRect(0, 0, WIDTH, HEIGHT);
+				ctx.fillStyle = 'rgb(200, 200, 200)';
+				ctx.fillRect(0, 0, WIDTH, HEIGHT);
+
+				ctx.lineWidth = 2;
+				ctx.strokeStyle = 'rgba(0, 255, 255, 0.8)';
+
+				ctx.beginPath();
+				var A = 100;
+				for (var i = 0; i < WIDTH; i++) {
+					ctx.lineTo(WIDTH-i, ys[i]);
+					// ctx.lineTo(WIDTH-i, A*Math.sin(Math.PI/200*(i-dx)) + HEIGHT/2);
+				}
+				ctx.stroke();
+				dx += 4;
+				if (Math.floor(dx/400)%2) {
+					// A = 
+				};
+				ys.unshift(A*Math.sin(Math.PI/400*(dx)) + HEIGHT/2);
+				ys.pop();
+			}
+			draw();
+		}
+	</script>
+</body>
+</html>
